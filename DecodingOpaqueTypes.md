@@ -216,10 +216,10 @@ Same thing in a single function:
 ```elm
 decoder : Decoder Cred
 decoder =
-    D.map Cred <|
-        D.map2 CredData
-            (D.field "username" D.string)
-            (D.field "token" D.string)
+    D.map2 CredData
+        (D.field "username" D.string)
+        (D.field "token" D.string)
+        |> D.map Cred
 ```
 
 Using `NoRedInk/elm-json-decode-pipelines`:
