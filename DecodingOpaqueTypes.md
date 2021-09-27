@@ -166,3 +166,9 @@ decoder =
         |> DP.required "username" D.string
         |> DP.required "token" D.string
 ```
+
+With this example I hope you now have a better understanding of decoding JSON into opaque types in Elm.
+
+JSON decoders do not have to be difficult! 😉
+
+Happy Elm coding!
