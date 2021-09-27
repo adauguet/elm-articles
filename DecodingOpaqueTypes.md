@@ -132,7 +132,7 @@ decoder =
         (D.field "username" D.string)
         (D.field "token" D.string)
 ```
-Or grouping everything in a single function:
+Or group everything in a single function:
 ```elm
 import Json.Decode as D exposing (Decoder)
 
@@ -167,8 +167,81 @@ decoder =
         |> DP.required "token" D.string
 ```
 
+## Refactoring
+
+There are two problems with the current solution:
+1. Things can quickly get messy with a bigger record.
+2. We have to write the record constructor ourselves ... which can be avoided.
+
+To fix those problems, we can extract the record in its own `type alias`:
+```elm
+type Cred = Cred CredData
+
+type alias CredData =
+    { username : String
+    , token : String
+    }
+```
+
+This way, we get our free constructor back! And we can immediatly use it when decoding:
+
+Using `elm/json`:
+```elm
+dataDecoder : Decoder CredData
+dataDecoder =
+    D.map2 CredData
+        (D.field "username" D.string)
+        (D.field "token" D.string)
+```
+
+Using `NoRedInk/elm-json-decode-pipelines`:
+```elm
+dataDecoder : Decoder CredData
+dataDecoder =
+    D.succeed CredData
+        |> DP.required "username" D.string
+        |> DP.required "token" D.string
+```
+
+But wait, we are not decoding the `Cred` type yet! In fact it really looks like we are back to square one.
+
+Yet we are close to the solution. This is were `Json.Decode.map` comes handy:
+```elm
+decoder : Decoder Cred
+decoder =
+    D.map Cred dataDecoder
+```
+
+Same thing in a single function:
+```elm
+decoder : Decoder Cred
+decoder =
+    D.map Cred <|
+        D.map2 CredData
+            (D.field "username" D.string)
+            (D.field "token" D.string)
+```
+
+Using `NoRedInk/elm-json-decode-pipelines`:
+```elm
+decoder : Decoder Cred
+decoder =
+    D.succeed CredData
+        |> DP.required "username" D.string
+        |> DP.required "token" D.string
+        |> D.map Cred
+```
+
+Extracting `CredData` allows us to write a simple record decoder and wrapping it with `Json.Decoder.map` to decode the full opaque type. As you can see the final solution is quite simple.
+
+## Conclusion
+
 With this example I hope you now have a better understanding of decoding JSON into opaque types in Elm.
 
 JSON decoders do not have to be difficult! 😉
 
 Happy Elm coding!
+
+## Credits
+
+Original question from `Stanley`. Thanks to `@sebbes` for re-reading and relevant suggestions.
